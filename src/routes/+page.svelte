@@ -52,7 +52,7 @@
 	}
 
 	const eventImages = import.meta.glob(
-		'../lib/assets/Crops/{Abigail_Icon,Caroline_Icon,Demetrius_Icon,Evelyn_Icon,Haley_Icon,Jas_Icon,Krobus_Icon,Lewis_Icon,Linus_Icon,Maru_Icon,Pam_Icon,Penny_Icon,Sam_Icon,Shane_Icon,Vincent_Icon,Willy_Icon,24px-Pierre_Icon,24px-Sandy_Icon,24px-Iridium_Quality_Icon,18px-Gold}.png',
+		'../lib/assets/Crops/{24px-Iridium_Quality_Icon,18px-Gold}.png',
 		{
 			eager: true,
 			import: 'default',
@@ -62,6 +62,26 @@
 
 	function eventImage(fileName: string) {
 		return eventImages[`../lib/assets/Crops/${fileName}.png`];
+	}
+
+	const villagerImages = import.meta.glob('../lib/assets/Villagers/*.png', {
+		eager: true,
+		import: 'default',
+		query: '?url'
+	}) as Record<string, string>;
+
+	function villagerImage(fileName: string) {
+		return villagerImages[`../lib/assets/Villagers/${fileName}.png`];
+	}
+
+	function birthdayEvent(id: string, day: number, villager: string): CalendarEvent {
+		return {
+			id,
+			day,
+			title: `${villager} Birthday`,
+			type: 'birthday',
+			icon: villagerImage(villager)
+		};
 	}
 
 	const eventTypeLabels: Record<CalendarEvent['type'], string> = {
@@ -576,50 +596,14 @@
 		{ id: 'spring-bookseller-21', day: 21, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'spring-bookseller-22', day: 22, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'spring-bookseller-25', day: 25, title: 'Bookseller possible', type: 'bookseller' },
-		{ id: 'spring-kent-birthday', day: 4, title: 'Kent Birthday', type: 'birthday' },
-		{
-			id: 'spring-lewis-birthday',
-			day: 7,
-			title: 'Lewis Birthday',
-			type: 'birthday',
-			icon: eventImage('Lewis_Icon')
-		},
-		{
-			id: 'spring-vincent-birthday',
-			day: 10,
-			title: 'Vincent Birthday',
-			type: 'birthday',
-			icon: eventImage('Vincent_Icon')
-		},
-		{
-			id: 'spring-haley-birthday',
-			day: 14,
-			title: 'Haley Birthday',
-			type: 'birthday',
-			icon: eventImage('Haley_Icon')
-		},
-		{
-			id: 'spring-pam-birthday',
-			day: 18,
-			title: 'Pam Birthday',
-			type: 'birthday',
-			icon: eventImage('Pam_Icon')
-		},
-		{
-			id: 'spring-shane-birthday',
-			day: 20,
-			title: 'Shane Birthday',
-			type: 'birthday',
-			icon: eventImage('Shane_Icon')
-		},
-		{
-			id: 'spring-pierre-birthday',
-			day: 26,
-			title: 'Pierre Birthday',
-			type: 'birthday',
-			icon: eventImage('24px-Pierre_Icon')
-		},
-		{ id: 'spring-emily-birthday', day: 27, title: 'Emily Birthday', type: 'birthday' }
+		birthdayEvent('spring-kent-birthday', 4, 'Kent'),
+		birthdayEvent('spring-lewis-birthday', 7, 'Lewis'),
+		birthdayEvent('spring-vincent-birthday', 10, 'Vincent'),
+		birthdayEvent('spring-haley-birthday', 14, 'Haley'),
+		birthdayEvent('spring-pam-birthday', 18, 'Pam'),
+		birthdayEvent('spring-shane-birthday', 20, 'Shane'),
+		birthdayEvent('spring-pierre-birthday', 26, 'Pierre'),
+		birthdayEvent('spring-emily-birthday', 27, 'Emily')
 	];
 
 	const summerEvents: CalendarEvent[] = [
@@ -635,15 +619,15 @@
 		{ id: 'summer-bookseller-18', day: 18, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'summer-bookseller-25', day: 25, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'summer-bookseller-27', day: 27, title: 'Bookseller possible', type: 'bookseller' },
-		{ id: 'summer-jas-birthday', day: 4, title: 'Jas Birthday', type: 'birthday', icon: eventImage('Jas_Icon') },
-		{ id: 'summer-gus-birthday', day: 8, title: 'Gus Birthday', type: 'birthday' },
-		{ id: 'summer-maru-birthday', day: 10, title: 'Maru Birthday', type: 'birthday', icon: eventImage('Maru_Icon') },
-		{ id: 'summer-alex-birthday', day: 13, title: 'Alex Birthday', type: 'birthday' },
-		{ id: 'summer-sam-birthday', day: 17, title: 'Sam Birthday', type: 'birthday', icon: eventImage('Sam_Icon') },
-		{ id: 'summer-demetrius-birthday', day: 19, title: 'Demetrius Birthday', type: 'birthday', icon: eventImage('Demetrius_Icon') },
-		{ id: 'summer-dwarf-birthday', day: 22, title: 'Dwarf Birthday', type: 'birthday' },
-		{ id: 'summer-willy-birthday', day: 24, title: 'Willy Birthday', type: 'birthday', icon: eventImage('Willy_Icon') },
-		{ id: 'summer-leo-birthday', day: 26, title: 'Leo Birthday', type: 'birthday' }
+		birthdayEvent('summer-jas-birthday', 4, 'Jas'),
+		birthdayEvent('summer-gus-birthday', 8, 'Gus'),
+		birthdayEvent('summer-maru-birthday', 10, 'Maru'),
+		birthdayEvent('summer-alex-birthday', 13, 'Alex'),
+		birthdayEvent('summer-sam-birthday', 17, 'Sam'),
+		birthdayEvent('summer-demetrius-birthday', 19, 'Demetrius'),
+		birthdayEvent('summer-dwarf-birthday', 22, 'Dwarf'),
+		birthdayEvent('summer-willy-birthday', 24, 'Willy'),
+		birthdayEvent('summer-leo-birthday', 26, 'Leo')
 	];
 
 	const fallEvents: CalendarEvent[] = [
@@ -661,14 +645,14 @@
 		{ id: 'fall-bookseller-19', day: 19, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'fall-bookseller-22', day: 22, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'fall-bookseller-25', day: 25, title: 'Bookseller possible', type: 'bookseller' },
-		{ id: 'fall-penny-birthday', day: 2, title: 'Penny Birthday', type: 'birthday', icon: eventImage('Penny_Icon') },
-		{ id: 'fall-elliott-birthday', day: 5, title: 'Elliott Birthday', type: 'birthday' },
-		{ id: 'fall-jodi-birthday', day: 11, title: 'Jodi Birthday', type: 'birthday' },
-		{ id: 'fall-abigail-birthday', day: 13, title: 'Abigail Birthday', type: 'birthday', icon: eventImage('Abigail_Icon') },
-		{ id: 'fall-sandy-birthday', day: 15, title: 'Sandy Birthday', type: 'birthday', icon: eventImage('24px-Sandy_Icon') },
-		{ id: 'fall-marnie-birthday', day: 18, title: 'Marnie Birthday', type: 'birthday' },
-		{ id: 'fall-robin-birthday', day: 21, title: 'Robin Birthday', type: 'birthday' },
-		{ id: 'fall-george-birthday', day: 24, title: 'George Birthday', type: 'birthday' }
+		birthdayEvent('fall-penny-birthday', 2, 'Penny'),
+		birthdayEvent('fall-elliott-birthday', 5, 'Elliott'),
+		birthdayEvent('fall-jodi-birthday', 11, 'Jodi'),
+		birthdayEvent('fall-abigail-birthday', 13, 'Abigail'),
+		birthdayEvent('fall-sandy-birthday', 15, 'Sandy'),
+		birthdayEvent('fall-marnie-birthday', 18, 'Marnie'),
+		birthdayEvent('fall-robin-birthday', 21, 'Robin'),
+		birthdayEvent('fall-george-birthday', 24, 'George')
 	];
 
 	const winterEvents: CalendarEvent[] = [
@@ -685,15 +669,15 @@
 		{ id: 'winter-bookseller-19', day: 19, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'winter-bookseller-22', day: 22, title: 'Bookseller possible', type: 'bookseller' },
 		{ id: 'winter-bookseller-24', day: 24, title: 'Bookseller possible', type: 'bookseller' },
-		{ id: 'winter-krobus-birthday', day: 1, title: 'Krobus Birthday', type: 'birthday', icon: eventImage('Krobus_Icon') },
-		{ id: 'winter-linus-birthday', day: 3, title: 'Linus Birthday', type: 'birthday', icon: eventImage('Linus_Icon') },
-		{ id: 'winter-caroline-birthday', day: 7, title: 'Caroline Birthday', type: 'birthday', icon: eventImage('Caroline_Icon') },
-		{ id: 'winter-sebastian-birthday', day: 10, title: 'Sebastian Birthday', type: 'birthday' },
-		{ id: 'winter-harvey-birthday', day: 14, title: 'Harvey Birthday', type: 'birthday' },
-		{ id: 'winter-wizard-birthday', day: 17, title: 'Wizard Birthday', type: 'birthday' },
-		{ id: 'winter-evelyn-birthday', day: 20, title: 'Evelyn Birthday', type: 'birthday', icon: eventImage('Evelyn_Icon') },
-		{ id: 'winter-leah-birthday', day: 23, title: 'Leah Birthday', type: 'birthday' },
-		{ id: 'winter-clint-birthday', day: 26, title: 'Clint Birthday', type: 'birthday' }
+		birthdayEvent('winter-krobus-birthday', 1, 'Krobus'),
+		birthdayEvent('winter-linus-birthday', 3, 'Linus'),
+		birthdayEvent('winter-caroline-birthday', 7, 'Caroline'),
+		birthdayEvent('winter-sebastian-birthday', 10, 'Sebastian'),
+		birthdayEvent('winter-harvey-birthday', 14, 'Harvey'),
+		birthdayEvent('winter-wizard-birthday', 17, 'Wizard'),
+		birthdayEvent('winter-evelyn-birthday', 20, 'Evelyn'),
+		birthdayEvent('winter-leah-birthday', 23, 'Leah'),
+		birthdayEvent('winter-clint-birthday', 26, 'Clint')
 	];
 
 	const calendarEventsBySeason: Record<Season, CalendarEvent[]> = {
