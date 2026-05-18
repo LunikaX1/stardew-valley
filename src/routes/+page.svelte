@@ -38,6 +38,21 @@
 		icon?: string;
 	};
 
+	type UpgradeTool = {
+		id: string;
+		name: string;
+		image: string;
+		upgrades: string[];
+	};
+
+	type UpgradeTier = {
+		id: string;
+		name: string;
+		cost: number;
+		material: string;
+		materialIcon: string;
+	};
+
 	const cropImages = import.meta.glob(
 		'../lib/assets/Crops/{Amaranth,Artichoke,Beet,Blueberry,Blue_Jazz,Bok_Choy,Broccoli,Carrot,Cauliflower,Coffee_Bean,Corn,Cranberries,Eggplant,Fairy_Rose,Garlic,Grape,Green_Bean,Hops,Hot_Pepper,Kale,Melon,Parsnip,Poppy,Potato,Powdermelon,Pumpkin,Radish,Red_Cabbage,Rhubarb,Starfruit,Strawberry,Summer_Spangle,Summer_Squash,Sunflower,Tomato,Tulip,Unmilled_Rice,Wheat,Yam}.png',
 		{
@@ -62,6 +77,19 @@
 
 	function eventImage(fileName: string) {
 		return eventImages[`../lib/assets/Crops/${fileName}.png`];
+	}
+
+	const toolImages = import.meta.glob(
+		'../lib/assets/Tools/{Axe,Pickaxe,Hoe,Watering_Can,Copper_Axe,Copper_Pickaxe,Copper_Hoe,Copper_Watering_Can,Trash_Can_Copper,Steel_Axe,Steel_Pickaxe,Steel_Hoe,Steel_Watering_Can,Trash_Can_Steel,Gold_Axe,Gold_Pickaxe,Gold_Hoe,Gold_Watering_Can,Trash_Can_Gold,Iridium_Axe,Iridium_Pickaxe,Iridium_Hoe,Iridium_Watering_Can,Trash_Can_Iridium,24px-Copper_Bar,24px-Iron_Bar,24px-Gold_Bar,24px-Iridium_Bar}.png',
+		{
+			eager: true,
+			import: 'default',
+			query: '?url'
+		}
+	) as Record<string, string>;
+
+	function toolImage(fileName: string) {
+		return toolImages[`../lib/assets/Tools/${fileName}.png`];
 	}
 
 	const villagerImages = import.meta.glob('../lib/assets/Villagers/*.png', {
@@ -556,6 +584,68 @@
 	const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	const days = Array.from({ length: 28 }, (_, index) => index + 1);
 	const seasonOrder: Season[] = ['spring', 'summer', 'fall', 'winter'];
+	const upgradeTiers: UpgradeTier[] = [
+		{
+			id: 'copper',
+			name: 'Copper',
+			cost: 2000,
+			material: 'Copper Bar x5',
+			materialIcon: toolImage('24px-Copper_Bar')
+		},
+		{
+			id: 'steel',
+			name: 'Steel',
+			cost: 5000,
+			material: 'Iron Bar x5',
+			materialIcon: toolImage('24px-Iron_Bar')
+		},
+		{
+			id: 'gold',
+			name: 'Gold',
+			cost: 10000,
+			material: 'Gold Bar x5',
+			materialIcon: toolImage('24px-Gold_Bar')
+		},
+		{
+			id: 'iridium',
+			name: 'Iridium',
+			cost: 25000,
+			material: 'Iridium Bar x5',
+			materialIcon: toolImage('24px-Iridium_Bar')
+		}
+	];
+	const upgradeTools: UpgradeTool[] = [
+		{
+			id: 'axe',
+			name: 'Axe',
+			image: toolImage('Axe'),
+			upgrades: ['Copper_Axe', 'Steel_Axe', 'Gold_Axe', 'Iridium_Axe']
+		},
+		{
+			id: 'pickaxe',
+			name: 'Pickaxe',
+			image: toolImage('Pickaxe'),
+			upgrades: ['Copper_Pickaxe', 'Steel_Pickaxe', 'Gold_Pickaxe', 'Iridium_Pickaxe']
+		},
+		{
+			id: 'hoe',
+			name: 'Hoe',
+			image: toolImage('Hoe'),
+			upgrades: ['Copper_Hoe', 'Steel_Hoe', 'Gold_Hoe', 'Iridium_Hoe']
+		},
+		{
+			id: 'watering-can',
+			name: 'Watering Can',
+			image: toolImage('Watering_Can'),
+			upgrades: ['Copper_Watering_Can', 'Steel_Watering_Can', 'Gold_Watering_Can', 'Iridium_Watering_Can']
+		},
+		{
+			id: 'trash-can',
+			name: 'Trash Can',
+			image: toolImage('Trash_Can_Copper'),
+			upgrades: ['Trash_Can_Copper', 'Trash_Can_Steel', 'Trash_Can_Gold', 'Trash_Can_Iridium']
+		}
+	];
 	const springEvents: CalendarEvent[] = [
 		{ id: 'spring-egg-festival', day: 13, title: 'Egg Festival', type: 'festival' },
 		{
@@ -689,6 +779,12 @@
 
 	let selectedSeason = $state<Season>('spring');
 	let selectedCropId = $state('parsnip');
+	let selectedToolId = $state('watering-can');
+	let asideTab = $state<'crops' | 'upgrade'>('crops');
+	let currentToolTierIndex = $state(-1);
+	let targetToolTierIndex = $state(0);
+	let upgradeStartSeason = $state<Season>('spring');
+	let upgradeStartDay = $state(27);
 	let plantQuantity = $state(24);
 	let draggedPlanId = $state<string | null>(null);
 	let draggingCropId = $state<string | null>(null);
@@ -720,6 +816,11 @@
 	const season = $derived(seasons[selectedSeason]);
 	const seasonCrops = $derived(crops.filter((crop) => crop.seasons.includes(selectedSeason)));
 	const selectedCrop = $derived(crops.find((crop) => crop.id === selectedCropId) ?? seasonCrops[0]);
+	const selectedTool = $derived(upgradeTools.find((tool) => tool.id === selectedToolId) ?? upgradeTools[0]);
+	const targetUpgradeOptions = $derived(upgradeTiers.slice(currentToolTierIndex + 1));
+	const selectedUpgradeTier = $derived(upgradeTiers[targetToolTierIndex] ?? upgradeTiers[0]);
+	const selectedToolUpgradeImage = $derived(selectedTool.upgrades[targetToolTierIndex] ?? selectedTool.upgrades[0]);
+	const upgradePlan = $derived(getToolUpgradePlan());
 	const visiblePlans = $derived(
 		plans.filter(
 			(plan) =>
@@ -770,6 +871,44 @@
 
 	function dayInSeasonFromAbsoluteDay(day: number) {
 		return ((day - 1) % 28) + 1;
+	}
+
+	function clampDay(day: number) {
+		return Math.max(1, Math.min(28, Math.round(day || 1)));
+	}
+
+	function formatSeasonDay(absolute: number) {
+		const year = Math.floor((absolute - 1) / 112) + 1;
+		const dayInYear = ((absolute - 1) % 112) + 1;
+		const resultSeason = seasonFromAbsoluteDay(dayInYear) ?? 'spring';
+		const label = `${seasons[resultSeason].name} ${dayInSeasonFromAbsoluteDay(dayInYear)}`;
+		return year > 1 ? `${label}, Year ${year}` : label;
+	}
+
+	function getToolUpgradePlan() {
+		const startAbsolute = absoluteDay(upgradeStartSeason, clampDay(upgradeStartDay));
+		const pickupAbsolute = startAbsolute + 2;
+		const missingAbsolute = startAbsolute + 1;
+		const tiers = upgradeTiers.slice(currentToolTierIndex + 1, targetToolTierIndex + 1);
+
+		return {
+			pickupLabel: formatSeasonDay(pickupAbsolute),
+			missingLabel: formatSeasonDay(missingAbsolute),
+			cost: tiers.reduce((sum, tier) => sum + tier.cost, 0),
+			materials: tiers.map((tier) => tier.material),
+			steps: Math.max(0, tiers.length)
+		};
+	}
+
+	function selectTool(toolId: string) {
+		selectedToolId = toolId;
+	}
+
+	function updateCurrentToolTier(tierIndex: number) {
+		currentToolTierIndex = Number(tierIndex);
+		if (targetToolTierIndex <= currentToolTierIndex) {
+			targetToolTierIndex = Math.min(currentToolTierIndex + 1, upgradeTiers.length - 1);
+		}
 	}
 
 	function getHarvests(plan: Plan): Harvest[] {
@@ -1122,6 +1261,20 @@
 		</section>
 
 		<aside class="tool-tab" aria-label="Crop tools">
+			<nav class="aside-tabs">
+				<button
+					class:active={asideTab === 'crops'}
+					type="button"
+					onclick={() => (asideTab = 'crops')}
+				>Crops</button>
+				<button
+					class:active={asideTab === 'upgrade'}
+					type="button"
+					onclick={() => (asideTab = 'upgrade')}
+				>Tool Upgrade</button>
+			</nav>
+
+			{#if asideTab === 'crops'}
 			<div class="tool-card crop-picker-card">
 				<div class="tool-card__header">
 					<strong>Crops</strong>
@@ -1190,6 +1343,109 @@
 					</div>
 				</div>
 			</div>
+			{/if}
+
+			{#if asideTab === 'upgrade'}
+			<div class="tool-card upgrade-card">
+				<div class="tool-card__header">
+					<strong>Tool Upgrade</strong>
+					<span class="count-badge">2d</span>
+				</div>
+
+				<div class="tool-grid">
+					{#each upgradeTools as tool}
+						<button
+							class:active={selectedToolId === tool.id}
+							class="tool-tile"
+							type="button"
+							onclick={() => selectTool(tool.id)}
+						>
+							<img alt={tool.name} src={tool.image} />
+							<span>{tool.name}</span>
+						</button>
+					{/each}
+				</div>
+
+				<div class="upgrade-controls">
+					<label>
+						<span>Current</span>
+						<select
+							value={currentToolTierIndex}
+							onchange={(event) => updateCurrentToolTier(Number(event.currentTarget.value))}
+						>
+							<option value={-1}>Basic</option>
+							{#each upgradeTiers as tier, index}
+								{#if index < upgradeTiers.length - 1}
+									<option value={index}>{tier.name}</option>
+								{/if}
+							{/each}
+						</select>
+					</label>
+
+					<label>
+						<span>Target</span>
+						<select
+							value={targetToolTierIndex}
+							onchange={(event) => (targetToolTierIndex = Number(event.currentTarget.value))}
+						>
+							{#each upgradeTiers as tier, index}
+								{#if index > currentToolTierIndex}
+									<option value={index}>{tier.name}</option>
+								{/if}
+							{/each}
+						</select>
+					</label>
+
+					<label>
+						<span>Drop off</span>
+						<select bind:value={upgradeStartSeason}>
+							{#each Object.entries(seasons) as [key, item]}
+								<option value={key}>{item.name}</option>
+							{/each}
+						</select>
+					</label>
+
+					<label>
+						<span>Day</span>
+						<input
+							min="1"
+							max="28"
+							type="number"
+							value={upgradeStartDay}
+							oninput={(event) => (upgradeStartDay = clampDay(Number(event.currentTarget.value)))}
+						/>
+					</label>
+				</div>
+
+				<div class="upgrade-result">
+					<div class="upgrade-result__hero">
+						<span>
+							<img alt={`${selectedUpgradeTier.name} ${selectedTool.name}`} src={toolImage(selectedToolUpgradeImage)} />
+						</span>
+						<div>
+							<small>Ready on</small>
+							<strong>{upgradePlan.pickupLabel}</strong>
+						</div>
+					</div>
+
+					<div class="upgrade-result__stats">
+						<div>
+							<span>No tool</span>
+							<strong>{upgradePlan.missingLabel}</strong>
+						</div>
+						<div>
+							<span>Total cost</span>
+							<strong>{upgradePlan.cost.toLocaleString()}g</strong>
+						</div>
+						<div class="material-list">
+							<span>Materials</span>
+							<strong>{upgradePlan.materials.join(' + ')}</strong>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/if}
 
 			<div class="tool-card plan-list-card">
 				<div class="tool-card__header">
@@ -1694,12 +1950,42 @@
 
 	/* ── Tool tab ── */
 
+	.aside-tabs {
+		display: flex;
+		border-bottom: 2px solid #e0d4b7;
+		margin: -10px -10px 0;
+		padding: 0;
+	}
+
+	.aside-tabs button {
+		flex: 1;
+		padding: 8px 12px;
+		background: transparent;
+		border: none;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: #8a7a62;
+		cursor: pointer;
+		transition: color 0.15s, border-color 0.15s;
+	}
+
+	.aside-tabs button.active {
+		color: var(--season-deep, #2f271f);
+		border-bottom-color: var(--season-accent, #7ab648);
+	}
+
+	.aside-tabs button:hover:not(.active) {
+		color: #5a4a32;
+	}
+
 	.tool-tab {
 		position: sticky;
 		top: 16px;
 		align-self: start;
 		max-height: calc(100vh - 32px);
-		overflow: hidden;
+		overflow-y: auto;
 		padding: 10px;
 		display: flex;
 		flex-direction: column;
@@ -1923,6 +2209,155 @@
 		color: #2f271f;
 		font-size: 0.8rem;
 		font-weight: 800;
+	}
+
+	/* Tool upgrade */
+
+	.upgrade-card {
+		background: #f8fbf3;
+	}
+
+	.tool-grid {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 4px;
+	}
+
+	.tool-tile {
+		display: grid;
+		min-width: 0;
+		min-height: 54px;
+		place-items: center;
+		gap: 3px;
+		padding: 6px 3px;
+		border: 1px solid #d9cdb4;
+		border-radius: 6px;
+		background: #fffdf8;
+		color: #655846;
+		cursor: pointer;
+	}
+
+	.tool-tile.active,
+	.tool-tile:hover {
+		border-color: color-mix(in srgb, var(--season-accent) 58%, #d9cdb4);
+		background: color-mix(in srgb, var(--season-accent) 15%, #fffdf8);
+		color: #2f271f;
+	}
+
+	.tool-tile img {
+		width: 24px;
+		height: 24px;
+		object-fit: contain;
+	}
+
+	.tool-tile span {
+		max-width: 100%;
+		overflow: hidden;
+		font-size: 0.58rem;
+		font-weight: 800;
+		line-height: 1.1;
+		text-align: center;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.upgrade-controls {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 6px;
+	}
+
+	.upgrade-controls label {
+		display: grid;
+		gap: 3px;
+	}
+
+	.upgrade-controls span,
+	.upgrade-result__stats span,
+	.upgrade-result__hero small {
+		color: #8a7a62;
+		font-size: 0.62rem;
+		font-weight: 800;
+		text-transform: uppercase;
+	}
+
+	.upgrade-controls select,
+	.upgrade-controls input {
+		min-width: 0;
+		width: 100%;
+		padding: 6px 8px;
+		border: 1px solid #d9cdb4;
+		border-radius: 6px;
+		background: #fffdf8;
+		color: #2f271f;
+		font-size: 0.76rem;
+		font-weight: 750;
+	}
+
+	.upgrade-result {
+		display: grid;
+		gap: 6px;
+		padding: 8px;
+		border: 1px solid color-mix(in srgb, var(--season-accent) 35%, #d9cdb4);
+		border-radius: 6px;
+		background: color-mix(in srgb, var(--season-accent) 9%, #fffdf8);
+	}
+
+	.upgrade-result__hero {
+		display: grid;
+		grid-template-columns: 38px minmax(0, 1fr);
+		gap: 8px;
+		align-items: center;
+	}
+
+	.upgrade-result__hero > span {
+		display: grid;
+		width: 38px;
+		aspect-ratio: 1;
+		place-items: center;
+		border-radius: 6px;
+		background: #fffdf8;
+	}
+
+	.upgrade-result__hero img {
+		width: 30px;
+		height: 30px;
+		object-fit: contain;
+	}
+
+	.upgrade-result__hero strong {
+		display: block;
+		margin-top: 2px;
+		color: var(--season-deep);
+		font-size: 1rem;
+		font-weight: 850;
+	}
+
+	.upgrade-result__stats {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 5px;
+	}
+
+	.upgrade-result__stats div {
+		min-width: 0;
+		padding: 6px 7px;
+		border: 1px solid #e0d4b7;
+		border-radius: 5px;
+		background: rgba(255, 253, 248, 0.76);
+	}
+
+	.upgrade-result__stats strong {
+		display: block;
+		margin-top: 2px;
+		color: #2f271f;
+		font-size: 0.72rem;
+		font-weight: 800;
+		line-height: 1.25;
+	}
+
+	.upgrade-result__stats .material-list {
+		grid-column: 1 / -1;
 	}
 
 	/* ── Plan list ── */
