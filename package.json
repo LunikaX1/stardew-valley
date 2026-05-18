@@ -7,6 +7,8 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"cf:dev": "npm run build && wrangler dev",
+		"deploy": "npm run build && wrangler deploy",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -36,6 +38,7 @@
 		"tailwindcss": "^4.2.2",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.1",
-		"vite": "^8.0.7"
+		"vite": "^8.0.7",
+		"wrangler": "^4.92.0"
 	}
 }
