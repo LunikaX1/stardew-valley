@@ -1789,7 +1789,7 @@
 	}
 
 	.crop-picker-card {
-		flex: 1 1 42%;
+		flex: 0 0 auto;
 	}
 
 	.plan-list-card {
@@ -1812,9 +1812,8 @@
 	.crop-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr 1fr;
-		flex: 1 1 auto;
 		gap: 4px;
-		min-height: 0;
+		height: 204px;
 		overflow-y: auto;
 		padding-right: 2px;
 	}
